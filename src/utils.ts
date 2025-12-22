@@ -6,7 +6,7 @@ import type {
   ToolSet,
   ToolCallOptions
 } from "ai";
-import { convertToModelMessages, isToolUIPart } from "ai";
+import { convertToModelMessages, isStaticToolUIPart } from "ai";
 import { APPROVAL } from "./shared";
 
 function isValidToolName<K extends PropertyKey, T extends object>(
@@ -41,8 +41,8 @@ export async function processToolCalls<Tools extends ToolSet>({
 
       const processedParts = await Promise.all(
         parts.map(async (part) => {
-          // Only process tool UI parts
-          if (!isToolUIPart(part)) return part;
+          // Only process static tool UI parts (dynamic tools handled separately)
+          if (!isStaticToolUIPart(part)) return part;
 
           const toolName = part.type.replace(
             "tool-",
@@ -64,7 +64,7 @@ export async function processToolCalls<Tools extends ToolSet>({
             const toolInstance = executions[toolName];
             if (toolInstance) {
               result = await toolInstance(part.input, {
-                messages: convertToModelMessages(messages),
+                messages: await convertToModelMessages(messages),
                 toolCallId: part.toolCallId
               });
             } else {
@@ -109,7 +109,7 @@ export function cleanupMessages(messages: UIMessage[]): UIMessage[] {
 
     // Filter out messages with incomplete tool calls
     const hasIncompleteToolCall = message.parts.some((part) => {
-      if (!isToolUIPart(part)) return false;
+      if (!isStaticToolUIPart(part)) return false;
       // Remove tool calls that are still streaming or awaiting input without results
       return (
         part.state === "input-streaming" ||

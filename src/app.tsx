@@ -1,7 +1,7 @@
 /** biome-ignore-all lint/correctness/useUniqueElementIds: it's alright */
 import { useEffect, useState, useRef, useCallback, use } from "react";
 import { useAgent } from "agents/react";
-import { isToolUIPart } from "ai";
+import { isStaticToolUIPart } from "ai";
 import { useAgentChat } from "agents/ai-react";
 import type { UIMessage } from "@ai-sdk/react";
 import type { tools } from "./tools";
@@ -122,7 +122,7 @@ export default function Chat() {
   const pendingToolCallConfirmation = agentMessages.some((m: UIMessage) =>
     m.parts?.some(
       (part) =>
-        isToolUIPart(part) &&
+        isStaticToolUIPart(part) &&
         part.state === "input-available" &&
         // Manual check inside the component
         toolsRequiringConfirmation.includes(
@@ -136,7 +136,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="h-[100vh] w-full p-4 flex justify-center items-center bg-fixed overflow-hidden">
+    <div className="h-screen w-full p-4 flex justify-center items-center bg-fixed overflow-hidden">
       <HasOpenAIKey />
       <div className="h-[calc(100vh-2rem)] w-full mx-auto max-w-lg flex flex-col shadow-xl rounded-md overflow-hidden relative border border-neutral-300 dark:border-neutral-800">
         <div className="px-4 py-3 border-b border-neutral-300 dark:border-neutral-800 flex items-center gap-3 sticky top-0 z-10">
@@ -242,7 +242,7 @@ export default function Chat() {
                     }`}
                   >
                     {showAvatar && !isUser ? (
-                      <Avatar username={"AI"} className="flex-shrink-0" />
+                      <Avatar username={"AI"} className="shrink-0" />
                     ) : (
                       !isUser && <div className="w-8" />
                     )}
@@ -295,7 +295,10 @@ export default function Chat() {
                             );
                           }
 
-                          if (isToolUIPart(part) && m.role === "assistant") {
+                          if (
+                            isStaticToolUIPart(part) &&
+                            m.role === "assistant"
+                          ) {
                             const toolCallId = part.toolCallId;
                             const toolName = part.type.replace("tool-", "");
                             const needsConfirmation =
@@ -361,7 +364,7 @@ export default function Chat() {
                     ? "Please respond to the tool confirmation above..."
                     : "Send a message..."
                 }
-                className="flex w-full border border-neutral-200 dark:border-neutral-700 px-3 py-2  ring-offset-background placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:focus-visible:ring-neutral-700 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-neutral-900 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base pb-10 dark:bg-neutral-900"
+                className="flex w-full border border-neutral-200 dark:border-neutral-700 px-3 py-2  ring-offset-background placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:focus-visible:ring-neutral-700 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-neutral-900 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl text-base! pb-10 dark:bg-neutral-900"
                 value={agentInput}
                 onChange={(e) => {
                   handleAgentInputChange(e);

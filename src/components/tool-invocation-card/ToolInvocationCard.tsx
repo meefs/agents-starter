@@ -51,7 +51,7 @@ export function ToolInvocationCard({
         className="w-full flex items-center gap-2 cursor-pointer"
       >
         <div
-          className={`${needsConfirmation ? "bg-[#F48120]/10" : "bg-[#F48120]/5"} p-1.5 rounded-full flex-shrink-0`}
+          className={`${needsConfirmation ? "bg-[#F48120]/10" : "bg-[#F48120]/5"} p-1.5 rounded-full shrink-0`}
         >
           <RobotIcon size={16} className="text-[#F48120]" />
         </div>
@@ -78,7 +78,7 @@ export function ToolInvocationCard({
             <h5 className="text-xs font-medium mb-1 text-muted-foreground">
               Arguments:
             </h5>
-            <pre className="bg-background/80 p-2 rounded-md text-xs overflow-auto whitespace-pre-wrap break-words max-w-[450px]">
+            <pre className="bg-background/80 p-2 rounded-md text-xs overflow-auto whitespace-pre-wrap wrap-break-word max-w-[450px]">
               {JSON.stringify(toolUIPart.input, null, 2)}
             </pre>
           </div>
@@ -107,7 +107,7 @@ export function ToolInvocationCard({
               <h5 className="text-xs font-medium mb-1 text-muted-foreground">
                 Result:
               </h5>
-              <pre className="bg-background/80 p-2 rounded-md text-xs overflow-auto whitespace-pre-wrap break-words max-w-[450px]">
+              <pre className="bg-background/80 p-2 rounded-md text-xs overflow-auto whitespace-pre-wrap wrap-break-word max-w-[450px]">
                 {(() => {
                   const result = toolUIPart.output;
                   if (isToolResultWithContent(result)) {
