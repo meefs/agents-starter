@@ -68,7 +68,7 @@ ${getSchedulePrompt({ date: new Date() })}
 If the user asks to schedule a task, use the schedule tool to schedule the task.
 `,
 
-          messages: convertToModelMessages(processedMessages),
+          messages: await convertToModelMessages(processedMessages),
           model,
           tools: allTools,
           // Type boundary: streamText expects specific tool types, but base class uses ToolSet
