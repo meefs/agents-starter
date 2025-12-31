@@ -2,7 +2,7 @@ import { routeAgentRequest, type Schedule } from "agents";
 
 import { getSchedulePrompt } from "agents/schedule";
 
-import { AIChatAgent } from "agents/ai-chat-agent";
+import { AIChatAgent } from "@cloudflare/ai-chat";
 import {
   generateId,
   streamText,
