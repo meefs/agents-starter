@@ -19,7 +19,7 @@ A starter template for building AI-powered chat agents using Cloudflare's Agent 
 ## Prerequisites
 
 - Cloudflare account
-- OpenAI API key
+- OpenAI API key (Find at [platform.openai.com](https://platform.openai.com/settings/organization/api-keys))
 
 ## Quick Start
 
@@ -226,6 +226,24 @@ Each use case can be implemented by:
 2. Customizing the UI for specific interactions
 3. Extending the agent's capabilities in `server.ts`
 4. Adding any necessary external API integrations
+
+## Screenshots
+
+**Chat Interface**
+
+<img width="324" alt="Chat interface" src="https://github.com/user-attachments/assets/ea469652-f881-44eb-809e-7e42956d0fcf" />
+
+**Tool Confirmation Flow**
+
+<img width="351" alt="Tool confirmation" src="https://github.com/user-attachments/assets/09539bea-c989-4e3a-b201-d40f9310d442" />
+
+**Task Scheduling**
+
+<img width="449" alt="Task scheduling" src="https://github.com/user-attachments/assets/0d0f5e1c-b83f-4ce7-8ed6-a68ab60ce249" />
+
+**Light Theme**
+
+<img width="548" alt="Theme toggle" src="https://github.com/user-attachments/assets/51ef37cb-822b-42dd-af3d-e490916183f7" />
 
 ## Learn More
 
