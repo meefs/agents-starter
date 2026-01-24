@@ -76,7 +76,8 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
           onFinish: onFinish as unknown as StreamTextOnFinishCallback<
             typeof allTools
           >,
-          stopWhen: stepCountIs(10)
+          stopWhen: stepCountIs(10),
+          abortSignal: options?.abortSignal
         });
 
         writer.merge(result.toUIMessageStream());
