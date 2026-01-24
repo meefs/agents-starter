@@ -34,7 +34,7 @@ export class Chat extends AIChatAgent<Env> {
    */
   async onChatMessage(
     onFinish: StreamTextOnFinishCallback<ToolSet>,
-    _options?: { abortSignal?: AbortSignal }
+    options?: { abortSignal?: AbortSignal }
   ) {
     // const mcpConnection = await this.mcp.connect(
     //   "https://path-to-mcp-server/sse"
