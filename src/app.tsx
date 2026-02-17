@@ -332,6 +332,7 @@ function Chat() {
                       key={prompt}
                       variant="outline"
                       size="sm"
+                      disabled={isStreaming}
                       onClick={() => {
                         sendMessage({
                           role: "user",
