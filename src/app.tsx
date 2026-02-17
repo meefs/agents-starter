@@ -320,7 +320,31 @@ function Chat() {
             <Empty
               icon={<ChatCircleDotsIcon size={32} />}
               title="Start a conversation"
-              description={`Try "What's the weather in Paris?", "What timezone am I in?", "Calculate 5000 * 3", or "Remind me in 5 minutes to take a break"`}
+              contents={
+                <div className="flex flex-wrap justify-center gap-2">
+                  {[
+                    "What's the weather in Paris?",
+                    "What timezone am I in?",
+                    "Calculate 5000 * 3",
+                    "Remind me in 5 minutes to take a break"
+                  ].map((prompt) => (
+                    <Button
+                      key={prompt}
+                      variant="outline"
+                      size="sm"
+                      disabled={isStreaming}
+                      onClick={() => {
+                        sendMessage({
+                          role: "user",
+                          parts: [{ type: "text", text: prompt }]
+                        });
+                      }}
+                    >
+                      {prompt}
+                    </Button>
+                  ))}
+                </div>
+              }
             />
           )}
 
