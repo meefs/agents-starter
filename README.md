@@ -1,255 +1,234 @@
-# 🤖 Chat Agent Starter Kit
+# Agent Starter
 
 ![npm i agents command](./npm-agents-banner.svg)
 
 <a href="https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/agents-starter"><img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare"/></a>
 
-A starter template for building AI-powered chat agents using Cloudflare's Agent platform, powered by [`agents`](https://www.npmjs.com/package/agents). This project provides a foundation for creating interactive chat experiences with AI, complete with a modern UI and tool integration capabilities.
+A starter template for building AI chat agents on Cloudflare, powered by the [Agents SDK](https://developers.cloudflare.com/agents/).
 
-## Features
+Uses Workers AI (no API key required), with tools for weather, timezone detection, calculations with approval, and task scheduling.
 
-- 💬 Interactive chat interface with AI
-- 🛠️ Built-in tool system with human-in-the-loop confirmation
-- 📅 Advanced task scheduling (one-time, delayed, and recurring via cron)
-- 🌓 Dark/Light theme support
-- ⚡️ Real-time streaming responses
-- 🔄 State management and chat history
-- 🎨 Modern, responsive UI
-
-## Prerequisites
-
-- Cloudflare account
-- OpenAI API key (Find at [platform.openai.com](https://platform.openai.com/settings/organization/api-keys))
-
-## Quick Start
-
-1. Create a new project:
+## Quick start
 
 ```bash
 npx create-cloudflare@latest --template cloudflare/agents-starter
-```
-
-2. Install dependencies:
-
-```bash
+cd agents-starter
 npm install
+npm run dev
 ```
 
-3. Set up your environment:
+Open [http://localhost:5173](http://localhost:5173) to see your agent in action.
 
-Create a `.dev.vars` file:
+Try these prompts to see the different features:
 
-```env
-OPENAI_API_KEY=your_openai_api_key
+- **"What's the weather in Paris?"** — server-side tool (runs automatically)
+- **"What timezone am I in?"** — client-side tool (browser provides the answer)
+- **"Calculate 5000 \* 3"** — approval tool (asks you before running)
+- **"Remind me in 5 minutes to take a break"** — scheduling
+
+## Project structure
+
+```
+src/
+  server.ts    # Chat agent with tools and scheduling
+  app.tsx      # Chat UI built with Kumo components
+  client.tsx   # React entry point
+  styles.css   # Tailwind + Kumo styles
 ```
 
-4. Run locally:
+## What's included
+
+- **AI Chat** — Streaming responses powered by Workers AI via `AIChatAgent`
+- **Three tool patterns** — server-side auto-execute, client-side (browser), and human-in-the-loop approval
+- **Scheduling** — one-time, delayed, and recurring (cron) tasks
+- **Reasoning display** — shows model thinking as it streams, collapses when done
+- **Debug mode** — toggle in the header to inspect raw message JSON for each message
+- **Kumo UI** — Cloudflare's design system with dark/light mode
+- **Real-time** — WebSocket connection with automatic reconnection and message persistence
+
+## Making it your own
+
+### Name your project
+
+Update the name in `package.json` and `wrangler.jsonc` — the `name` in `wrangler.jsonc` becomes your deployed Worker's URL (`<name>.<subdomain>.workers.dev`).
+
+### Change the system prompt
+
+Edit the `system` string in `server.ts` to give your agent a different personality or focus area. This is the most impactful single change you can make.
+
+### Replace the demo tools with real ones
+
+The starter ships with demo tools (`getWeather` returns random data, `calculate` does basic arithmetic). Replace them with real implementations:
+
+```ts
+// In server.ts, replace a demo tool with a real API call:
+getWeather: tool({
+  description: "Get the current weather for a city",
+  inputSchema: z.object({ city: z.string() }),
+  execute: async ({ city }) => {
+    const res = await fetch(`https://api.weather.example/${city}`);
+    return res.json();
+  }
+}),
+```
+
+### Add your own tools
+
+Add new tools to the `tools` object in `server.ts`. There are three patterns:
+
+```ts
+// Auto-execute: runs on the server, no user interaction
+myTool: tool({
+  description: "...",
+  inputSchema: z.object({ /* ... */ }),
+  execute: async (input) => { /* return result */ }
+}),
+
+// Client-side: no execute function, browser provides the result
+// Handle it in app.tsx via the onToolCall callback
+browserTool: tool({
+  description: "...",
+  inputSchema: z.object({ /* ... */ })
+}),
+
+// Approval: add needsApproval to gate execution
+sensitiveTool: tool({
+  description: "...",
+  inputSchema: z.object({ /* ... */ }),
+  needsApproval: async (input) => true, // or conditional logic
+  execute: async (input) => { /* runs after approval */ }
+}),
+```
+
+### Customize scheduled task behavior
+
+When a scheduled task fires, `executeTask` runs on the server. It does its work and then uses `this.broadcast()` to notify connected clients (shown as a toast notification in the UI). Replace it with your own logic:
+
+```ts
+async executeTask(description: string, task: Schedule<string>) {
+  // Do the actual work
+  await sendEmail({ to: "user@example.com", subject: description });
+
+  // Notify connected clients
+  this.broadcast(
+    JSON.stringify({ type: "scheduled-task", description, timestamp: new Date().toISOString() })
+  );
+}
+```
+
+> **Why `broadcast()` instead of `saveMessages()`?** Injecting into chat history can cause the AI to see the notification as new context and re-trigger the same task in a loop. `broadcast()` sends a one-off event that the client displays separately from the conversation.
+
+### Remove scheduling
+
+If you don't need scheduling, remove `scheduleTask`, `getScheduledTasks`, and `cancelScheduledTask` from the tools object, the `executeTask` method, and the schedule-related imports (`getSchedulePrompt`, `scheduleSchema`, `Schedule`, `generateId`).
+
+### Add state beyond chat messages
+
+Use `this.setState()` and `this.state` for real-time state that syncs to all connected clients. See [Store and sync state](https://developers.cloudflare.com/agents/api-reference/store-and-sync-state/).
+
+### Add callable methods
+
+Expose agent methods as typed RPC that your client can call directly:
+
+```ts
+import { callable } from "agents";
+
+export class ChatAgent extends AIChatAgent<Env> {
+  @callable()
+  async getStats() {
+    return { messageCount: this.messages.length };
+  }
+}
+
+// Client-side:
+const stats = await agent.call("getStats");
+```
+
+See [Callable methods](https://developers.cloudflare.com/agents/api-reference/callable-methods/).
+
+### Connect to MCP servers
+
+Add external tools from MCP servers:
+
+```ts
+async onChatMessage(onFinish, options) {
+  // Connect to an MCP server
+  await this.mcp.connect("https://my-mcp-server.example/sse");
+
+  const result = streamText({
+    // ...
+    tools: {
+      ...myTools,
+      ...this.mcp.getAITools() // Include MCP tools
+    }
+  });
+}
+```
+
+See [MCP Client API](https://developers.cloudflare.com/agents/api-reference/mcp-client-api/).
+
+## Use a different AI model provider
+
+The starter uses [Workers AI](https://developers.cloudflare.com/workers-ai/) by default (no API key needed). To use a different provider:
+
+### OpenAI
 
 ```bash
-npm start
+npm install @ai-sdk/openai
 ```
 
-5. Deploy:
+```ts
+// In server.ts, replace the model:
+import { openai } from "@ai-sdk/openai";
+
+// Inside onChatMessage:
+const result = streamText({
+  model: openai("gpt-5.2")
+  // ...
+});
+```
+
+Create a `.env` file with your API key:
+
+```
+OPENAI_API_KEY=your-key-here
+```
+
+### Anthropic
+
+```bash
+npm install @ai-sdk/anthropic
+```
+
+```ts
+import { anthropic } from "@ai-sdk/anthropic";
+
+const result = streamText({
+  model: anthropic("claude-sonnet-4-20250514")
+  // ...
+});
+```
+
+Create a `.env` file with your API key:
+
+```
+ANTHROPIC_API_KEY=your-key-here
+```
+
+## Deploy
 
 ```bash
 npm run deploy
 ```
 
-## Project Structure
+Your agent is live on Cloudflare's global network. Messages persist in SQLite, streams resume on disconnect, and the agent hibernates when idle.
 
-```
-├── src/
-│   ├── app.tsx        # Chat UI implementation
-│   ├── server.ts      # Chat agent logic
-│   ├── tools.ts       # Tool definitions
-│   ├── utils.ts       # Helper functions
-│   └── styles.css     # UI styling
-```
+## Learn more
 
-## Customization Guide
-
-### Adding New Tools
-
-Add new tools in `tools.ts` using the tool builder:
-
-```ts
-// Example of a tool that requires confirmation
-const searchDatabase = tool({
-  description: "Search the database for user records",
-  parameters: z.object({
-    query: z.string(),
-    limit: z.number().optional()
-  })
-  // No execute function = requires confirmation
-});
-
-// Example of an auto-executing tool
-const getCurrentTime = tool({
-  description: "Get current server time",
-  parameters: z.object({}),
-  execute: async () => new Date().toISOString()
-});
-
-// Scheduling tool implementation
-const scheduleTask = tool({
-  description:
-    "schedule a task to be executed at a later time. 'when' can be a date, a delay in seconds, or a cron pattern.",
-  parameters: z.object({
-    type: z.enum(["scheduled", "delayed", "cron"]),
-    when: z.union([z.number(), z.string()]),
-    payload: z.string()
-  }),
-  execute: async ({ type, when, payload }) => {
-    // ... see the implementation in tools.ts
-  }
-});
-```
-
-To handle tool confirmations, add execution functions to the `executions` object:
-
-```typescript
-export const executions = {
-  searchDatabase: async ({
-    query,
-    limit
-  }: {
-    query: string;
-    limit?: number;
-  }) => {
-    // Implementation for when the tool is confirmed
-    const results = await db.search(query, limit);
-    return results;
-  }
-  // Add more execution handlers for other tools that require confirmation
-};
-```
-
-Tools can be configured in two ways:
-
-1. With an `execute` function for automatic execution
-2. Without an `execute` function, requiring confirmation and using the `executions` object to handle the confirmed action. NOTE: The keys in `executions` should match `toolsRequiringConfirmation` in `app.tsx`.
-
-### Use a different AI model provider
-
-The starting [`server.ts`](https://github.com/cloudflare/agents-starter/blob/main/src/server.ts) implementation uses the [`ai-sdk`](https://sdk.vercel.ai/docs/introduction) and the [OpenAI provider](https://sdk.vercel.ai/providers/ai-sdk-providers/openai), but you can use any AI model provider by:
-
-1. Installing an alternative AI provider for the `ai-sdk`, such as the [`workers-ai-provider`](https://sdk.vercel.ai/providers/community-providers/cloudflare-workers-ai) or [`anthropic`](https://sdk.vercel.ai/providers/ai-sdk-providers/anthropic) provider:
-2. Replacing the AI SDK with the [OpenAI SDK](https://github.com/openai/openai-node)
-3. Using the Cloudflare [Workers AI + AI Gateway](https://developers.cloudflare.com/ai-gateway/providers/workersai/#workers-binding) binding API directly
-
-For example, to use the [`workers-ai-provider`](https://sdk.vercel.ai/providers/community-providers/cloudflare-workers-ai), install the package:
-
-```sh
-npm install workers-ai-provider
-```
-
-Add an `ai` binding to `wrangler.jsonc`:
-
-```jsonc
-// rest of file
-  "ai": {
-    "binding": "AI"
-  }
-// rest of file
-```
-
-Replace the `@ai-sdk/openai` import and usage with the `workers-ai-provider`:
-
-```diff
-// server.ts
-// Change the imports
-- import { openai } from "@ai-sdk/openai";
-+ import { createWorkersAI } from 'workers-ai-provider';
-
-// Create a Workers AI instance
-+ const workersai = createWorkersAI({ binding: env.AI });
-
-// Use it when calling the streamText method (or other methods)
-// from the ai-sdk
-- const model = openai("gpt-4o-2024-11-20");
-+ const model = workersai("@cf/deepseek-ai/deepseek-r1-distill-qwen-32b")
-```
-
-Commit your changes and then run the `agents-starter` as per the rest of this README.
-
-### Modifying the UI
-
-The chat interface is built with React and can be customized in `app.tsx`:
-
-- Modify the theme colors in `styles.css`
-- Add new UI components in the chat container
-- Customize message rendering and tool confirmation dialogs
-- Add new controls to the header
-
-### Example Use Cases
-
-1. **Customer Support Agent**
-   - Add tools for:
-     - Ticket creation/lookup
-     - Order status checking
-     - Product recommendations
-     - FAQ database search
-
-2. **Development Assistant**
-   - Integrate tools for:
-     - Code linting
-     - Git operations
-     - Documentation search
-     - Dependency checking
-
-3. **Data Analysis Assistant**
-   - Build tools for:
-     - Database querying
-     - Data visualization
-     - Statistical analysis
-     - Report generation
-
-4. **Personal Productivity Assistant**
-   - Implement tools for:
-     - Task scheduling with flexible timing options
-     - One-time, delayed, and recurring task management
-     - Task tracking with reminders
-     - Email drafting
-     - Note taking
-
-5. **Scheduling Assistant**
-   - Build tools for:
-     - One-time event scheduling using specific dates
-     - Delayed task execution (e.g., "remind me in 30 minutes")
-     - Recurring tasks using cron patterns
-     - Task payload management
-     - Flexible scheduling patterns
-
-Each use case can be implemented by:
-
-1. Adding relevant tools in `tools.ts`
-2. Customizing the UI for specific interactions
-3. Extending the agent's capabilities in `server.ts`
-4. Adding any necessary external API integrations
-
-## Screenshots
-
-**Chat Interface**
-
-<img width="324" alt="Chat interface" src="https://github.com/user-attachments/assets/ea469652-f881-44eb-809e-7e42956d0fcf" />
-
-**Tool Confirmation Flow**
-
-<img width="351" alt="Tool confirmation" src="https://github.com/user-attachments/assets/09539bea-c989-4e3a-b201-d40f9310d442" />
-
-**Task Scheduling**
-
-<img width="449" alt="Task scheduling" src="https://github.com/user-attachments/assets/0d0f5e1c-b83f-4ce7-8ed6-a68ab60ce249" />
-
-**Light Theme**
-
-<img width="548" alt="Theme toggle" src="https://github.com/user-attachments/assets/51ef37cb-822b-42dd-af3d-e490916183f7" />
-
-## Learn More
-
-- [`agents`](https://github.com/cloudflare/agents/blob/main/packages/agents/README.md)
-- [Cloudflare Agents Documentation](https://developers.cloudflare.com/agents/)
-- [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
+- [Agents SDK documentation](https://developers.cloudflare.com/agents/)
+- [Build a chat agent tutorial](https://developers.cloudflare.com/agents/getting-started/build-a-chat-agent/)
+- [Chat agents API reference](https://developers.cloudflare.com/agents/api-reference/chat-agents/)
+- [Workers AI models](https://developers.cloudflare.com/workers-ai/models/)
 
 ## License
 
