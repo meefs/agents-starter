@@ -1,23 +1,50 @@
 import { createWorkersAI } from "workers-ai-provider";
-import { routeAgentRequest, type Schedule } from "agents";
+import { routeAgentRequest, callable, type Schedule } from "agents";
 import { getSchedulePrompt, scheduleSchema } from "agents/schedule";
-import { AIChatAgent } from "@cloudflare/ai-chat";
+import { AIChatAgent, type OnChatMessageOptions } from "@cloudflare/ai-chat";
 import {
   streamText,
   convertToModelMessages,
   pruneMessages,
   tool,
-  stepCountIs,
-  type StreamTextOnFinishCallback,
-  type ToolSet
+  stepCountIs
 } from "ai";
 import { z } from "zod";
 
 export class ChatAgent extends AIChatAgent<Env> {
-  async onChatMessage(
-    onFinish: StreamTextOnFinishCallback<ToolSet>,
-    options?: { abortSignal?: AbortSignal }
-  ) {
+  // Wait for MCP connections to restore after hibernation before processing messages
+  waitForMcpConnections = true;
+
+  onStart() {
+    // Configure OAuth popup behavior for MCP servers that require authentication
+    this.mcp.configureOAuthCallback({
+      customHandler: (result) => {
+        if (result.authSuccess) {
+          return new Response("<script>window.close();</script>", {
+            headers: { "content-type": "text/html" },
+            status: 200
+          });
+        }
+        return new Response(
+          `Authentication Failed: ${result.authError || "Unknown error"}`,
+          { headers: { "content-type": "text/plain" }, status: 400 }
+        );
+      }
+    });
+  }
+
+  @callable()
+  async addServer(name: string, url: string, host: string) {
+    return await this.addMcpServer(name, url, { callbackHost: host });
+  }
+
+  @callable()
+  async removeServer(serverId: string) {
+    await this.removeMcpServer(serverId);
+  }
+
+  async onChatMessage(_onFinish: unknown, options?: OnChatMessageOptions) {
+    const mcpTools = this.mcp.getAITools();
     const workersai = createWorkersAI({ binding: this.env.AI });
 
     const result = streamText({
@@ -33,6 +60,9 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
         toolCalls: "before-last-2-messages"
       }),
       tools: {
+        // MCP tools from connected servers
+        ...mcpTools,
+
         // Server-side tool: runs automatically on the server
         getWeather: tool({
           description: "Get the current weather for a city",
@@ -141,7 +171,6 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
           }
         })
       },
-      onFinish,
       stopWhen: stepCountIs(5),
       abortSignal: options?.abortSignal
     });
