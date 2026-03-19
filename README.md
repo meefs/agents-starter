@@ -6,7 +6,7 @@
 
 A starter template for building AI chat agents on Cloudflare, powered by the [Agents SDK](https://developers.cloudflare.com/agents/).
 
-Uses Workers AI (no API key required), with tools for weather, timezone detection, calculations with approval, and task scheduling.
+Uses Workers AI (no API key required), with tools for weather, timezone detection, calculations with approval, task scheduling, and vision (image input).
 
 ## Quick start
 
@@ -25,6 +25,7 @@ Try these prompts to see the different features:
 - **"What timezone am I in?"** — client-side tool (browser provides the answer)
 - **"Calculate 5000 \* 3"** — approval tool (asks you before running)
 - **"Remind me in 5 minutes to take a break"** — scheduling
+- **Drop an image and ask "What's in this image?"** — vision (image understanding)
 
 ## Project structure
 
@@ -39,6 +40,7 @@ src/
 ## What's included
 
 - **AI Chat** — Streaming responses powered by Workers AI via `AIChatAgent`
+- **Image input** — Drag-and-drop, paste, or click to attach images for vision-capable models
 - **Three tool patterns** — server-side auto-execute, client-side (browser), and human-in-the-loop approval
 - **Scheduling** — one-time, delayed, and recurring (cron) tasks
 - **Reasoning display** — shows model thinking as it streams, collapses when done
