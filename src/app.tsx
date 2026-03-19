@@ -354,9 +354,7 @@ function Chat() {
   }, [isStreaming]);
 
   const addFiles = useCallback((files: FileList | File[]) => {
-    const images = Array.from(files).filter((f) =>
-      f.type.startsWith("image/")
-    );
+    const images = Array.from(files).filter((f) => f.type.startsWith("image/"));
     if (images.length === 0) return;
     setAttachments((prev) => [...prev, ...images.map(createAttachment)]);
   }, []);

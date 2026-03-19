@@ -76,9 +76,7 @@ ${getSchedulePrompt({ date: new Date() })}
 If the user asks to schedule a task, use the schedule tool to schedule the task.`,
       // Prune old tool calls to save tokens on long conversations
       messages: pruneMessages({
-        messages: inlineDataUrls(
-          await convertToModelMessages(this.messages)
-        ),
+        messages: inlineDataUrls(await convertToModelMessages(this.messages)),
         toolCalls: "before-last-2-messages"
       }),
       tools: {
