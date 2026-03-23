@@ -4,6 +4,7 @@ import { useAgentChat } from "@cloudflare/ai-chat/react";
 import { isToolUIPart, getToolName } from "ai";
 import type { UIMessage } from "ai";
 import type { MCPServersState } from "agents";
+import type { ChatAgent } from "./server";
 import {
   Button,
   Badge,
@@ -241,7 +242,7 @@ function Chat() {
   const [isAddingServer, setIsAddingServer] = useState(false);
   const mcpPanelRef = useRef<HTMLDivElement>(null);
 
-  const agent = useAgent({
+  const agent = useAgent<ChatAgent>({
     agent: "ChatAgent",
     onOpen: useCallback(() => setConnected(true), []),
     onClose: useCallback(() => setConnected(false), []),
@@ -290,11 +291,11 @@ function Chat() {
     if (!mcpName.trim() || !mcpUrl.trim()) return;
     setIsAddingServer(true);
     try {
-      await agent.call("addServer", [
+      await agent.stub.addServer(
         mcpName.trim(),
         mcpUrl.trim(),
         window.location.origin
-      ]);
+      );
       setMcpName("");
       setMcpUrl("");
     } catch (e) {
@@ -306,7 +307,7 @@ function Chat() {
 
   const handleRemoveServer = async (serverId: string) => {
     try {
-      await agent.call("removeServer", [serverId]);
+      await agent.stub.removeServer(serverId);
     } catch (e) {
       console.error("Failed to remove MCP server:", e);
     }

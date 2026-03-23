@@ -35,6 +35,8 @@ function inlineDataUrls(messages: ModelMessage[]): ModelMessage[] {
 }
 
 export class ChatAgent extends AIChatAgent<Env> {
+  maxPersistedMessages = 100;
+
   onStart() {
     // Configure OAuth popup behavior for MCP servers that require authentication
     this.mcp.configureOAuthCallback({
@@ -161,7 +163,9 @@ If the user asks to schedule a task, use the schedule tool to schedule the task.
                     : null;
             if (!input) return "Invalid schedule type";
             try {
-              this.schedule(input, "executeTask", description);
+              this.schedule(input, "executeTask", description, {
+                idempotent: true
+              });
               return `Task scheduled: "${description}" (${when.type}: ${input})`;
             } catch (error) {
               return `Error scheduling task: ${error}`;
