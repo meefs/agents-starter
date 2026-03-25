@@ -15,6 +15,7 @@ import {
 } from "@cloudflare/kumo";
 import { Toasty, useKumoToastManager } from "@cloudflare/kumo/components/toast";
 import { Streamdown } from "streamdown";
+import { code } from "@streamdown/code";
 import { Switch } from "@cloudflare/kumo";
 import {
   PaperPlaneRightIcon,
@@ -798,6 +799,7 @@ function Chat() {
                         <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-kumo-base text-kumo-default leading-relaxed">
                           <Streamdown
                             className="sd-theme rounded-2xl rounded-bl-md p-3"
+                            plugins={{ code }}
                             controls={false}
                             isAnimating={isLastAssistant && isStreaming}
                           >
