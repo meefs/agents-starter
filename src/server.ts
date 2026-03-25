@@ -56,8 +56,8 @@ export class ChatAgent extends AIChatAgent<Env> {
   }
 
   @callable()
-  async addServer(name: string, url: string, host: string) {
-    return await this.addMcpServer(name, url, { callbackHost: host });
+  async addServer(name: string, url: string) {
+    return await this.addMcpServer(name, url);
   }
 
   @callable()

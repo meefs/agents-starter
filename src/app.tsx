@@ -291,11 +291,7 @@ function Chat() {
     if (!mcpName.trim() || !mcpUrl.trim()) return;
     setIsAddingServer(true);
     try {
-      await agent.stub.addServer(
-        mcpName.trim(),
-        mcpUrl.trim(),
-        window.location.origin
-      );
+      await agent.stub.addServer(mcpName.trim(), mcpUrl.trim());
       setMcpName("");
       setMcpUrl("");
     } catch (e) {
