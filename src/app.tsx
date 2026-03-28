@@ -1,22 +1,21 @@
 import { Suspense, useCallback, useState, useEffect, useRef } from "react";
 import { useAgent } from "agents/react";
 import { useAgentChat } from "@cloudflare/ai-chat/react";
-import { isToolUIPart, getToolName } from "ai";
-import type { UIMessage } from "ai";
+import { getToolName, isToolUIPart, type UIMessage } from "ai";
 import type { MCPServersState } from "agents";
 import type { ChatAgent } from "./server";
 import {
-  Button,
   Badge,
-  InputArea,
+  Button,
   Empty,
+  InputArea,
   Surface,
+  Switch,
   Text
 } from "@cloudflare/kumo";
 import { Toasty, useKumoToastManager } from "@cloudflare/kumo/components/toast";
 import { Streamdown } from "streamdown";
 import { code } from "@streamdown/code";
-import { Switch } from "@cloudflare/kumo";
 import {
   PaperPlaneRightIcon,
   StopIcon,
