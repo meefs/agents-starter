@@ -1,13 +1,13 @@
 import { createWorkersAI } from "workers-ai-provider";
-import { routeAgentRequest, callable, type Schedule } from "agents";
+import { callable, routeAgentRequest, type Schedule } from "agents";
 import { getSchedulePrompt, scheduleSchema } from "agents/schedule";
 import { AIChatAgent, type OnChatMessageOptions } from "@cloudflare/ai-chat";
 import {
-  streamText,
   convertToModelMessages,
   pruneMessages,
-  tool,
   stepCountIs,
+  streamText,
+  tool,
   type ModelMessage
 } from "ai";
 import { z } from "zod";
