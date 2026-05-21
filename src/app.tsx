@@ -536,6 +536,7 @@ function Chat() {
                         type="text"
                         value={mcpName}
                         onChange={(e) => setMcpName(e.target.value)}
+                        aria-label="MCP server name"
                         placeholder="Server name"
                         className="w-full px-3 py-1.5 text-sm rounded-lg border border-kumo-line bg-kumo-base text-kumo-default placeholder:text-kumo-inactive focus:outline-none focus:ring-1 focus:ring-kumo-accent"
                       />
@@ -544,6 +545,7 @@ function Chat() {
                           type="text"
                           value={mcpUrl}
                           onChange={(e) => setMcpUrl(e.target.value)}
+                          aria-label="MCP server URL"
                           placeholder="https://mcp.example.com"
                           className="flex-1 px-3 py-1.5 text-sm rounded-lg border border-kumo-line bg-kumo-base text-kumo-default placeholder:text-kumo-inactive focus:outline-none focus:ring-1 focus:ring-kumo-accent font-mono"
                         />
@@ -832,6 +834,7 @@ function Chat() {
             type="file"
             multiple
             accept="image/*"
+            aria-label="Upload image attachments"
             className="hidden"
             onChange={(e) => {
               if (e.target.files) addFiles(e.target.files);
