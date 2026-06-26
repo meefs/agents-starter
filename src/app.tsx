@@ -321,6 +321,7 @@ function Chat() {
     status
   } = useAgentChat({
     agent,
+    experimental_throttle: 100,
     onToolCall: async (event) => {
       if (
         "addToolOutput" in event &&

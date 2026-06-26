@@ -13,6 +13,7 @@ import { z } from "zod";
 
 export class ChatAgent extends AIChatAgent<Env> {
   maxPersistedMessages = 100;
+  chatRecovery = true;
 
   onStart() {
     // Configure OAuth popup behavior for MCP servers that require authentication
